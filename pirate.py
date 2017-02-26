@@ -2,17 +2,31 @@
 
 import socket               # Import socket module
 import json
-import subprocess
+
+import rummy
 
 s = socket.socket()         # Create a socket object
 host = socket.gethostname() # Get local machine name
 port = 12345                # Reserve a port for your service.
 
-s.connect((host, port))
-obj = json.loads(str(s.recv(1024)))
-print json.dumps(obj)
-args = ["python", "rummy.pyc", "-w"]
-output = subprocess.check_output(args).strip()
-obj = json.loads(str(output))
-print json.dumps(obj)
-s.close                     # Close the socket when done
+
+def openConnection():
+    s.connect((host, port))
+    obj = json.loads(str(s.recv(1024)))
+    print json.dumps(obj)
+
+def closeConnection():
+    s.close()
+
+
+captain = rummy.Rummy("Manni", 5000)
+print json.dumps(captain.wake())
+
+#rum = rummy.Rummy("Manni", 5000)
+openConnection()
+
+data = {"data": "Thank you for connecting to the Pirate"}
+
+s.send(json.dumps(data))
+
+closeConnection()
