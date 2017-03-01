@@ -8,6 +8,8 @@ class Rummy:
     state = 0
 
     def __init__(self, crewSize):
+        print json.dumps(self.wake())
+
         self.images = 20
         self.clues = {}
         self.crew = []

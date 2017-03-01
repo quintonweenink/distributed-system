@@ -9,43 +9,41 @@ execfile("rummy.py")
 
 class Quartermaster:
 
-    state = 0
+	state = 0
 
-    def __init__(self, crewSize):
-        self.s = {}
-        self.host = socket.gethostname()  # Get local machine name
-        self.port = 12345  # Reserve a port for your service.
+	def __init__(self, crewSize):
+		self.s = {}
+		self.host = socket.gethostname()  # Get local machine name
+		self.port = 12345  # Reserve a port for your service.
 
-        self.captain = Rummy(crewSize)
+		self.captain = Rummy(crewSize)
 
-    def toString(self):
-        self.captain.printCrew()
+	def toString(self):
+		self.captain.printCrew()
 
 
-    def listenDispatch(self):
-        s = socket.socket()  # Create a socket object
-        s.bind((self.host, self.port))  # Bind to the port
+	def listenDispatch(self):
+		self.s = socket.socket()  # Create a socket object
+		self.s.bind((self.host, self.port))  # Bind to the port
 
-        s.listen(20)  # Now wait for client connection.
-        while True:
-            print json.dumps(self.captain.wake())
+		self.s.listen(20)  # Now wait for client connection.
+		while True:
+			c, addr = self.s.accept()  # Establish connection with client.
 
-            c, addr = s.accept()  # Establish connection with client.
+			straddr = 'Got connection from' + str(addr)
+			print straddr
 
-            straddr = 'Got connection from' + str(addr)
-            print straddr
-            obj = {"data": "Thank you for connecting to the Quartermaster"}
-            c.send(json.dumps(obj))
-            obj = json.loads(str(c.recv(1024)))
+			obj = json.loads(str(c.recv(1024)))
+			print json.dumps(obj)
 
-            print json.dumps(obj)
-            c.close()  # Close the connection
 
-            for pirate in self.captain.crew:
-                print "{"
-                pirate.toString()
-                print "}"
-        return
+
+			self.captain.crew[0].res['message'] = "Connected to the Quartermaster"
+			c.send(json.dumps(self.captain.crew[0].res))
+
+
+			c.close()  # Close the connection
+		return
 
 quartermaster = Quartermaster(5)
 quartermaster.listenDispatch()
