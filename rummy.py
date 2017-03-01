@@ -1,15 +1,30 @@
 import json
 import subprocess
 
+execfile("member.py")
+
 class Rummy:
 
     state = 0
 
-    def __init__(self, name, salary):
+    def __init__(self, crewSize):
         self.images = 20
         self.clues = {}
-        self.name = name
-        self.salary = salary
+        self.crew = []
+        self.crewSize = crewSize
+
+        res = self.add(str(self.crewSize))
+        print res['message']
+        crewids = res['data']
+
+        for id in crewids:
+            self.crew.append(Member("", id, ""))
+
+        for pirate in self.crew:
+            print "{"
+            pirate.toString()
+            print "}"
+
         Rummy.state += 1
 
     def displayState(self):
@@ -53,8 +68,7 @@ class Rummy:
 
     def verify(self, clues):
         print "Rummy.verify called"
-        self.clues = self.reqRummy( ["-v", str(clues)] )
-        return self.clues
+        return self.reqRummy( ["-v", str(clues)] )
 
     def reqRummy(self, commands):
         args = ["python", "rummy.pyc"]
@@ -66,6 +80,11 @@ class Rummy:
         obj = json.loads(str(output))
         return obj
 
+    def printCrew(self):
+        for pirate in self.crew:
+            print "{"
+            pirate.toString()
+            print "}"
 # {
 #     "status" :string, <-- success/error
 #     "message" :string, <-- message of error/success

@@ -2,12 +2,13 @@
 
 import socket               # Import socket module
 import json
+import time
 
-import rummy
-
-s = socket.socket()         # Create a socket object
+s = socket.socket()  # Create a socket object
 host = socket.gethostname() # Get local machine name
 port = 12345                # Reserve a port for your service.
+
+id = -1;
 
 
 def openConnection():
@@ -19,14 +20,27 @@ def closeConnection():
     s.close()
 
 
-captain = rummy.Rummy("Manni", 5000)
-print json.dumps(captain.wake())
 
-#rum = rummy.Rummy("Manni", 5000)
 openConnection()
 
-data = {"data": "Thank you for connecting to the Pirate"}
+data = {"data": "Thank you for connecting to the Pirate",
+        "id": str(id)}
+s.send(json.dumps(data))
 
+closeConnection()
+
+
+time.sleep(5) # delays for 10 seconds
+
+s = socket.socket()  # Create a socket object
+
+
+openConnection()
+
+id = 0
+
+data = {"data": "Thank you for your time",
+        "id": str(id)}
 s.send(json.dumps(data))
 
 closeConnection()
