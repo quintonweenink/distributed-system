@@ -3,12 +3,16 @@ import subprocess
 
 execfile("member.py")
 
-class Rummy:
+class Clue:
+    def __init__(self, id, data):
+        self.data = data
+        self.id = id
 
-    state = 0
+class Rummy:
 
     def __init__(self, crewSize):
         print json.dumps(self.wake())
+        print json.dumps(self.prepare())
 
         self.images = 20
         self.clues = {}
@@ -20,14 +24,20 @@ class Rummy:
         crewids = res['data']
 
         for id in crewids:
-            self.crew.append(Member("", id, ""))
+            self.crew.append(Member(id))
 
-        for pirate in self.crew:
-            print "{"
-            pirate.toString()
-            print "}"
+        print json.dumps(self.shipout())
 
-        Rummy.state += 1
+        res = self.getClues()
+        print res['message']
+
+        data = res['data']
+        for pirate in data:
+            for member in self.crew:
+                if member.res['id'] == pirate["id"]:
+                    member.clues = pirate["data"]
+
+        self.startPirates()
 
     def displayState(self):
         print "State: %d" % Rummy.empCount
@@ -57,7 +67,7 @@ class Rummy:
 
     def remove(self, pirates):
         print "Rummy.remove called"
-        return self.reqRummy( ["-a", str(pirates)] )
+        return self.reqRummy( ["-r", str(pirates)] )
 
     def shipout(self):
         print "Rummy.shipout called"
@@ -69,8 +79,8 @@ class Rummy:
         return self.clues
 
     def verify(self, clues):
-        print "Rummy.verify called"
-        return self.reqRummy( ["-v", str(clues)] )
+        #print "Rummy.verify called"
+        return self.reqRummy( ["-v", json.dumps(clues)] )
 
     def reqRummy(self, commands):
         args = ["python", "rummy.pyc"]
@@ -82,14 +92,19 @@ class Rummy:
         obj = json.loads(str(output))
         return obj
 
+    def startPirate(self):
+        print "Rummy.startPirate called"
+        args = ["./pirate.py", "&"]
+        subprocess.Popen(args)
+
+    def startPirates(self):
+        print "Rummy.startPirates called"
+        for i in range(0, self.crewSize):
+            self.startPirate()
+        print "Done starting pirates"
+
     def printCrew(self):
         for pirate in self.crew:
             print "{"
             pirate.toString()
             print "}"
-# {
-#     "status" :string, <-- success/error
-#     "message" :string, <-- message of error/success
-#     "data" :string-or-list,
-#     "finished" :boolean <-- only true if all maps & clues have been solved and the treasure was found
-# }

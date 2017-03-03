@@ -3,6 +3,7 @@
 import socket               # Import socket module
 import json
 import hashlib
+import sys
 
 
 
@@ -11,8 +12,9 @@ class Pirate:
     def __init__(self):
         self.s = 0
         self.host = socket.gethostname()  # Get local machine name
-        self.port = 12345  # Reserve a port for your service.
+        self.port = 12482    # Reserve a port for your service.
         self.clue = "No clue provided"
+        self.clueid = -1
 
         self.res = {
             "status": "",  # string, <-- success/error
@@ -25,27 +27,36 @@ class Pirate:
     def toString(self):
         print ("    Id:" + str(self.id))
 
-    def openConnection(self):
+    def communicate(self):
         self.s = socket.socket()  # Create a socket object
         self.s.connect((self.host, self.port))
-        self.res['data'] = self.clue
-        self.s.send(json.dumps(self.res))
-        obj = json.loads(str(self.s.recv(1024)))
-        self.clue = obj['data']
-        print json.dumps(obj)
+        self.res['data'] = {
+            'key':self.clue,
+            'id':self.clueid
+        }
 
-    def closeConnection(self):
+        self.s.send(json.dumps(self.res))
+
+        obj = json.loads(str(self.s.recv(4096)))
+
+
+        if self.res['id'] == -1:
+            self.res['id'] = obj['id']
+            self.clue = obj['data']['data']
+            self.clueid = obj['data']['id']
+        elif self.res['data'] == "":
+            sys.exit("This pirate is done")
+        else:
+            self.clue = obj['data']['data']
+            self.clueid = obj['data']['id']
+
         self.s.close()
 
     def listen(self):
-        self.res['finished'] = False
-        self.openConnection()
-        self.closeConnection()
-
         self.solveTheClue()
+        self.communicate()
 
-        self.openConnection()
-        self.closeConnection()
+
 
     def solveTheClue(self):
         self.digInTheSand()
@@ -136,5 +147,6 @@ class Pirate:
 
 pirate = Pirate()
 
+pirate.communicate()
 while(True):
     pirate.listen()
