@@ -15,8 +15,9 @@ class Quartermaster:
     def __init__(self, crewSize):
         self.s = {}
         self.host = socket.gethostname()  # Get local machine name
-        self.port = 12482  # Reserve a port for your service.
+        self.port = 12359  # Reserve a port for your service.
         self.crewSize = crewSize
+        self.clueList = []
 
         print "========== QUARTERMASTER ======="
 
@@ -25,6 +26,7 @@ class Quartermaster:
         print "Crew Size: ", self.crewSize
 
         print "================================"
+        print ""
 
         self.s = socket.socket()  # Create a socket object
         self.s.bind((self.host, self.port))  # Bind to the port
@@ -36,47 +38,54 @@ class Quartermaster:
     def toString(self):
         self.captain.printCrew()
 
+    def addToClueList(self, id, data):
+        clue = {"id": id, "data": [data]}
+        self.clueList.append(clue)
+
+    def isDone(self):
+        for member in self.captain.crew:
+            if len(member.clues) > 0:
+                return False
+        return True
+
 
     def listenDispatch(self):
-        clueList = []
-        isDone = False
-        while not isDone:
-            c, addr = self.s.accept()  # Establish connection with client.
 
-            obj = json.loads(str(c.recv(1024)))
+        while not self.isDone():
 
-            #print json.dumps(obj)
-            if obj["id"] == -1:
-                for member in self.captain.crew:
-                    if member.connected == False:
-                        member.res['message'] = "Connected to the Quartermaster. Giving you an id and clue"
-                        if len(member.clues) >= 1:
-                            member.res['data'] = member.clues.pop()
-                        else:
-                            member.res['data'] = ""
-                        member.connected = True
-                        c.send(json.dumps(member.res))
-                        break
-            else:
-                for member in self.captain.crew:
-                    if member.res['id'] == obj["id"]:
-                        member.res['message'] = "You are finished, Lets get you another clue"
-                        if len(member.clues) >= 1:
-                            member.res['data'] = member.clues.pop()
-                        else:
-                            member.res['data'] = ""
-                        clue = {"id": member.res["id"], "data": [obj['data']]}
-                        clueList.append(clue)
-                        member.cluesSolved += 1
-                        c.send(json.dumps(member.res))
-                        break
+            if not self.isDone():
+                c, addr = self.s.accept()  # Establish connection with client.
+                obj = json.loads(str(c.recv(1024)))
 
-            print 'X',
+                #print json.dumps(obj)
+                if obj["id"] == -1:
+                    for member in self.captain.crew:
+                        if member.connected == False:
+                            member.connected = True
+                            member.getClue()
 
-            if len(clueList) > 9:
-                rummyObj = self.captain.verify(clueList)
-                #print json.dumps(rummyObj)
-                clueList = []
+                            c.send(json.dumps(member.res))
+                            break
+                else:
+                    for member in self.captain.crew:
+                        if member.res['id'] == obj["id"]:
+                            member.getClue()
+                            if obj['data'] != "wait":
+                                self.addToClueList(member.res['id'], obj['data'])
+                            member.cluesSolved += 1
+
+                            c.send(json.dumps(member.res))
+                            break
+
+                c.close()  # Close the connection
+
+            sys.stdout.write("X")
+            sys.stdout.flush()
+
+
+            if len(self.clueList) > 49 or self.isDone():
+                rummyObj = self.captain.verify(self.clueList)
+                self.clueList = []
 
                 if 'finished' in rummyObj:
                     print "YOU COMPLETED THE PROBLEM"
@@ -87,42 +96,19 @@ class Quartermaster:
                             if member.res['id'] == clueError["id"]:
                                 for error in clueError['data']:
                                     member.clues.append(error)
-                                    #print "Clue Error: " + json.dumps(error)
                                     member.cluesSolved -= 1
+                                    member.failed += 1
+                            elif len(member.clues) == 0:
+                                member.res["finished"] = True
 
-
+                print ""
                 print "========== MY PIRATES =========="
                 for pirate in self.captain.crew:
-                    print "{"
                     pirate.toString()
-                    print "}"
                 print "================================"
-                print 'Next clue set: ',
+                print ""
+                print 'Next clue set: '
 
-            isDone = True
-            for member in self.captain.crew:
-                if len(member.clues) != 0:
-                    isDone = False
-
-
-
-            c.close()  # Close the connection
-
-        if len(clueList) > 0:
-            rummyObj = self.captain.verify(clueList)
-            # print json.dumps(rummyObj)
-
-            if 'finished' in rummyObj:
-                print "GOT FINISHED RESPONSE"
-            elif rummyObj['status'] == "error":
-                data = rummyObj['data']
-                for clueError in data:
-                    for member in self.captain.crew:
-                        if member.res['id'] == clueError["id"]:
-                            for error in clueError['data']:
-                                member.clues.append(error)
-                                # print "Clue Error: " + json.dumps(error)
-                                member.cluesSolved -= 1
 
 
         print "YOU HAVE COMPLETED THE PROBLEM"

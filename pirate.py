@@ -4,6 +4,7 @@ import socket               # Import socket module
 import json
 import hashlib
 import sys
+import time
 
 
 
@@ -12,7 +13,7 @@ class Pirate:
     def __init__(self):
         self.s = 0
         self.host = socket.gethostname()  # Get local machine name
-        self.port = 12482    # Reserve a port for your service.
+        self.port = 12359    # Reserve a port for your service.
         self.clue = "No clue provided"
         self.clueid = -1
 
@@ -44,7 +45,11 @@ class Pirate:
             self.res['id'] = obj['id']
             self.clue = obj['data']['data']
             self.clueid = obj['data']['id']
-        elif self.res['data'] == "":
+        elif obj['data'] == "wait":
+            time.sleep(1)
+            self.clue = "wait"
+            self.res["data"] = "wait"
+        elif obj['finished'] == True:
             sys.exit("This pirate is done")
         else:
             self.clue = obj['data']['data']
@@ -53,7 +58,8 @@ class Pirate:
         self.s.close()
 
     def listen(self):
-        self.solveTheClue()
+        if self.clue != "wait":
+            self.solveTheClue()
         self.communicate()
 
 
