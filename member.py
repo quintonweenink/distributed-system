@@ -4,7 +4,10 @@ class Member:
         self.connected = False;
         self.clues = []
         self.cluesSolved = 0
+        self.totalCluesSolved = 0
         self.failed = 0
+        self.totalFailed = 0
+        self.paused = False
 
         self.res = {
             "status": "",  # string, <-- success/error
@@ -15,16 +18,12 @@ class Member:
         }
 
     def toString(self):
-        print ("{")
-        print ("    connected:" + str(self.connected))
-        print ("    Clues solved:" + str(self.cluesSolved))
-        print ("    Clues left:" + str(len(self.clues)))
-        print ("    Id:" + str(self.res['id']))
-        print ("    Failure rate:" + str((float(self.failed) / float(self.cluesSolved))))
-        print ("}")
+        failureRate = "{0:.1f}".format(100.0 * (float(self.totalFailed) / float(self.totalCluesSolved + 1)))
+        return "| "+str(self.res['id'])+"\t| "+str(self.connected)+"\t| "+str(self.cluesSolved)+"\t| "+str(len(self.clues))+"\t| "+ failureRate + "%\t|\n"
+
 
     def getClue(self):
-        if len(self.clues) >= 1:
+        if len(self.clues) > 0:
             self.res['data'] = self.clues.pop()
         else:
             self.res['data'] = "wait"

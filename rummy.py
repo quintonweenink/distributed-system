@@ -28,6 +28,9 @@ class Rummy:
 
         print json.dumps(self.shipout())
 
+        self.startPirates()
+
+    def getPirateClues(self):
         res = self.getClues()
         print res['message']
 
@@ -36,8 +39,6 @@ class Rummy:
             for member in self.crew:
                 if member.res['id'] == pirate["id"]:
                     member.clues = pirate["data"]
-
-        self.startPirates()
 
     def displayState(self):
         print "State: %d" % Rummy.empCount

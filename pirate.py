@@ -7,13 +7,13 @@ import sys
 import time
 
 
-
+# Agent
 class Pirate:
 
     def __init__(self):
         self.s = 0
         self.host = socket.gethostname()  # Get local machine name
-        self.port = 12359    # Reserve a port for your service.
+        self.port = 12393    # Reserve a port for your service.
         self.clue = "No clue provided"
         self.clueid = -1
 
@@ -45,12 +45,20 @@ class Pirate:
             self.res['id'] = obj['id']
             self.clue = obj['data']['data']
             self.clueid = obj['data']['id']
-        elif obj['data'] == "wait":
-            time.sleep(1)
-            self.clue = "wait"
-            self.res["data"] = "wait"
         elif obj['finished'] == True:
-            sys.exit("This pirate is done")
+            self.s.close()
+            sys.stdout.write("0")
+            sys.stdout.flush()
+            sys.exit()
+        elif obj['data'] == "wait":
+            #sys.stdout.write("W")
+            #sys.stdout.flush()
+            time.sleep(7)
+            self.clue = "wait"
+        elif obj['status'] == "pause":
+            sys.stdout.write("P")
+            sys.stdout.flush()
+            time.sleep(10)
         else:
             self.clue = obj['data']['data']
             self.clueid = obj['data']['id']
