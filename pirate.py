@@ -13,7 +13,7 @@ class Pirate:
     def __init__(self):
         self.s = 0
         self.host = socket.gethostname()  # Get local machine name
-        self.port = 12393    # Reserve a port for your service.
+        self.port = 12396     # Reserve a port for your service.
         self.clue = "No clue provided"
         self.clueid = -1
 
@@ -47,13 +47,9 @@ class Pirate:
             self.clueid = obj['data']['id']
         elif obj['finished'] == True:
             self.s.close()
-            sys.stdout.write("0")
-            sys.stdout.flush()
-            sys.exit()
+            sys.exit("A pirate was killed")
         elif obj['data'] == "wait":
-            #sys.stdout.write("W")
-            #sys.stdout.flush()
-            time.sleep(7)
+            time.sleep(2)
             self.clue = "wait"
         elif obj['status'] == "pause":
             sys.stdout.write("P")
