@@ -4,7 +4,7 @@ import socket
 import json
 import sys
 
-execfile("rummy.py")
+execfile("irummy.py")
 
 # Master
 class Quartermaster:
@@ -34,7 +34,7 @@ class Quartermaster:
         self.s.bind((self.host, self.port))  # Bind to the port
         self.s.listen(20)  # Now wait for client connection.
 
-        self.captain = Rummy(crewSize)
+        self.captain = iRummy(crewSize)
 
     def listenDispatch(self):
 
@@ -64,7 +64,7 @@ class Quartermaster:
                     c, addr = self.s.accept()  # Establish connection with client.
                     obj = json.loads(str(c.recv(1024)))
 
-                    #print json.dumps(obj)
+                    # print json.dumps(obj)
                     if obj["id"] == -1:
                         for member in self.captain.crew:
                             if member.connected == False:
@@ -112,6 +112,7 @@ class Quartermaster:
                             c.close()
 
                         self.s.close()
+
                         sys.exit("YOU COMPLETED THE PROBLEM")
                     elif rummyObj['status'] == "error":
                         if 'data' in rummyObj:
@@ -137,7 +138,6 @@ class Quartermaster:
 
             print "YOU HAVE COMPLETED ONE MAP"
             numMap += 1
-        self.s.close()
 
     def toString(self):
         self.captain.printCrew()
@@ -204,9 +204,6 @@ class Quartermaster:
             output += " "
         output += "]\n"
         return output
-
-
-
 
 
 

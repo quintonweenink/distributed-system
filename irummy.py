@@ -8,7 +8,7 @@ class Clue:
         self.data = data
         self.id = id
 
-class Rummy:
+class iRummy:
 
     def __init__(self, crewSize):
         print json.dumps(self.wake())
