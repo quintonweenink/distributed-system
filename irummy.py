@@ -41,7 +41,7 @@ class iRummy:
                     member.clues = pirate["data"]
 
     def displayState(self):
-        print "State: %d" % Rummy.empCount
+        print "State: %d" % self.empCount
 
     def displayEmployee(self):
         print "Name : ", self.name, ", Salary: ", self.salary
