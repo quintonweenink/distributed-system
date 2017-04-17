@@ -14,7 +14,7 @@ class Quartermaster:
     def __init__(self, crewSize):
         self.s = {}
         self.host = socket.gethostname()  # Get local machine name
-        self.port = 12347  # Reserve a port for your service.
+        self.port = 12348  # Reserve a port for your service.
         self.crewSize = crewSize
         self.clueList = []
         self.verifyListSize = 199
