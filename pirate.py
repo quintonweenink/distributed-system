@@ -13,7 +13,7 @@ class Pirate:
     def __init__(self):
         self.s = 0
         self.host = socket.gethostname()  # Get local machine name
-        self.port = 12348     # Reserve a port for your service.
+        self.port = 12346     # Reserve a port for your service.
         self.clue = "No clue provided"
         self.clueid = -1
 

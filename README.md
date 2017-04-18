@@ -1,9 +1,5 @@
 # rummy
 
 # TODO:
-    * Make a makefile to start the priates or is it okay for the pirates to get started by the quatermaster
-    * Is it ok for the quatermaster to be a seperate py file or should it me selected among the agents.
-
-# Possible fixes:
-    * Fix the verify function to group requests my member id ( Might be faster might not )
-    * Change the pirates to have a list of clues to work from ( Maybe )
+	* Change the pirates to have independent ports & connections to communicate on.
+	* Ensure that if you kill a pirate that the execution still passes
