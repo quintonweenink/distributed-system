@@ -3,6 +3,7 @@
 import socket
 import json
 import sys
+import subprocess
 
 execfile("irummy.py")
 
@@ -12,9 +13,7 @@ class Quartermaster:
     state = 0
 
     def __init__(self, crewSize):
-        self.s = {}
-        self.host = socket.gethostname()  # Get local machine name
-        self.port = 12346  # Reserve a port for your service.
+        self.startport = 12345  # Reserve a port for your service.
         self.crewSize = crewSize
         self.clueList = []
         self.verifyListSize = 199
@@ -30,11 +29,7 @@ class Quartermaster:
         print "================================"
         print ""
 
-        self.s = socket.socket()  # Create a socket object
-        self.s.bind((self.host, self.port))  # Bind to the port
-        self.s.listen(20)  # Now wait for client connection.
-
-        self.captain = iRummy(crewSize)
+        self.captain = iRummy(crewSize, self.startport)
 
     def listenDispatch(self):
 
@@ -159,6 +154,11 @@ class Quartermaster:
                 return False
         return True
 
+    def startPirates(self):
+        print "Rummy.startPirates called"
+        for i in range(0, self.crewSize):
+            self.startPirate()
+        print "Done starting pirates"
 
     def backspace(self, n):
         print('\r'*n)

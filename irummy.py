@@ -10,7 +10,7 @@ class Clue:
 
 class iRummy:
 
-    def __init__(self, crewSize):
+    def __init__(self, crewSize, startport):
         print json.dumps(self.wake())
         print json.dumps(self.prepare())
 
@@ -22,13 +22,13 @@ class iRummy:
         res = self.add(str(self.crewSize))
         print res['message']
         crewids = res['data']
+        crewport = startport
 
         for id in crewids:
-            self.crew.append(Member(id))
+            self.crew.append(Member(id, crewport))
+            crewport = crewport + 1
 
         print json.dumps(self.shipout())
-
-        self.startPirates()
 
     def getPirateClues(self):
         res = self.getClues()
@@ -92,17 +92,6 @@ class iRummy:
         output = subprocess.check_output(args).strip()
         obj = json.loads(str(output))
         return obj
-
-    def startPirate(self):
-        print "Rummy.startPirate called"
-        args = ["./pirate.py", "&"]
-        subprocess.Popen(args)
-
-    def startPirates(self):
-        print "Rummy.startPirates called"
-        for i in range(0, self.crewSize):
-            self.startPirate()
-        print "Done starting pirates"
 
     def printCrew(self):
         for pirate in self.crew:
