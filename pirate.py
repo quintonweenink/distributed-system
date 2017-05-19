@@ -54,10 +54,6 @@ class Pirate:
         elif obj['data'] == "wait":
             time.sleep(2)
             self.clue = "wait"
-        elif obj['status'] == "pause":
-            sys.stdout.write("P")
-            sys.stdout.flush()
-            time.sleep(10)
         else:
             self.clue = obj['data']['data']
             self.clueid = obj['data']['id']
@@ -77,8 +73,6 @@ class Pirate:
         self.crawlIntoTheCave()
 
         self.clue = hashlib.md5(self.clue).hexdigest().upper()
-
-        self.res['finished'] = True
 
     def digInTheSand(self):
         for i in range(0, 100):

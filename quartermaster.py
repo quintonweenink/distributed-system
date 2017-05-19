@@ -9,8 +9,6 @@ execfile("irummy.py")
 # Master
 class Quartermaster:
 
-    state = 0
-
     def __init__(self, crewSize):
         self.s = {}
         self.host = socket.gethostname()  # Get local machine name
@@ -56,9 +54,8 @@ class Quartermaster:
 
             while not self.isAllDead() or len(self.clueList) > 0:
 
-                # Receive and dispatch clues
                 if not self.isAllDead():
-                    c, addr = self.s.accept()  # Establish connection with client.
+                    c, addr = self.s.accept()
                     obj = json.loads(str(c.recv(1024)))
                     if obj["id"] == -1:
                         for member in self.captain.crew:
@@ -83,42 +80,9 @@ class Quartermaster:
 
                     c.close()
 
+                self.verifyClues()
+
                 print self.printPirates() + self.printProblemState()
-
-
-                # VERIFY THE SOLVED CLUES
-                if len(self.clueList) > self.verifyListSize or self.isDone():
-                    self.numClue = 0
-                    print " Verifying clueList..."
-                    rummyObj = self.captain.verify(self.clueList)
-                    self.clueList = []
-
-                    if 'finished' in rummyObj:
-                        for member in self.captain.crew:
-                            c, addr = self.s.accept()
-                            member.res['finished'] = True
-                            obj = json.loads(str(c.recv(1024)))
-                            c.send(json.dumps(member.res))
-                            c.close()
-
-                        self.s.close()
-
-                        sys.exit("YOU COMPLETED THE PROBLEM")
-                    elif rummyObj['status'] == "error":
-                        if 'data' in rummyObj:
-                            data = rummyObj['data']
-                            for clueError in data:
-                                for member in self.captain.crew:
-                                    if member.res['id'] == clueError["id"]:
-                                        for error in clueError['data']:
-                                            member.clues.append(error)
-                                            member.statUpdateErrorClue()
-                                            self.numMapClue -= 1
-                    for member in self.captain.crew:
-                        if len(member.clues) == 0 and member.res['data'] == 'wait':
-                            member.paused = True
-
-                    print self.printPirates() + self.printProblemState()
 
             print "YOU HAVE COMPLETED ONE MAP"
             self.killPoorPerformingPirates()
@@ -154,6 +118,38 @@ class Quartermaster:
             self.captain.createMembers(crewids)
 
         self.startPirates()
+
+    def verifyClues(self):
+        if len(self.clueList) > self.verifyListSize or self.isDone():
+            self.numClue = 0
+            print " Verifying clueList..."
+            rummyObj = self.captain.verify(self.clueList)
+            self.clueList = []
+
+            if 'finished' in rummyObj:
+                for member in self.captain.crew:
+                    c, addr = self.s.accept()
+                    member.res['finished'] = True
+                    obj = json.loads(str(c.recv(1024)))
+                    c.send(json.dumps(member.res))
+                    c.close()
+
+                self.s.close()
+
+                sys.exit("YOU COMPLETED THE PROBLEM")
+            elif rummyObj['status'] == "error":
+                if 'data' in rummyObj:
+                    data = rummyObj['data']
+                    for clueError in data:
+                        for member in self.captain.crew:
+                            if member.res['id'] == clueError["id"]:
+                                for error in clueError['data']:
+                                    member.clues.append(error)
+                                    member.statUpdateErrorClue()
+                                    self.numMapClue -= 1
+            for member in self.captain.crew:
+                if len(member.clues) == 0 and member.res['data'] == 'wait':
+                    member.paused = True
 
     def startPirates(self):
         print "Rummy.startPirates called"
