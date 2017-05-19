@@ -10,7 +10,7 @@ class Clue:
 
 class iRummy:
 
-    def __init__(self, crewSize):
+    def __init__(self, crewSize, port):
         print json.dumps(self.wake())
         print json.dumps(self.prepare())
 
@@ -18,17 +18,15 @@ class iRummy:
         self.clues = {}
         self.crew = []
         self.crewSize = crewSize
+        self.port = port
 
         res = self.add(str(self.crewSize))
         print res['message']
         crewids = res['data']
 
-        for id in crewids:
-            self.crew.append(Member(id))
+        self.createMembers(crewids)
 
         print json.dumps(self.shipout())
-
-        self.startPirates()
 
     def getPirateClues(self):
         res = self.getClues()
@@ -50,6 +48,16 @@ class iRummy:
         print "Rummy.wake called"
         return self.reqRummy( ["-w"] )
 
+    def createMembers(self, crewids):
+        print "Rummy.createMembers called with " + str(crewids)
+        for id in crewids:
+            self.crew.append(Member(id))
+
+    def cleanUpMembers(self, killed):
+        print "Rummy.cleanUpMembers called"
+        for member in killed:
+            self.crew.remove(member)
+
     def gather(self):
         print "Rummy.gather called"
         return self.reqRummy( ["-g"] )
@@ -64,7 +72,7 @@ class iRummy:
 
     def add(self, size):
         print "Rummy.add called"
-        return self.reqRummy( ["-a", size] )
+        return self.reqRummy( ["-a", str(size)] )
 
     def remove(self, pirates):
         print "Rummy.remove called"
@@ -92,17 +100,6 @@ class iRummy:
         output = subprocess.check_output(args).strip()
         obj = json.loads(str(output))
         return obj
-
-    def startPirate(self):
-        print "Rummy.startPirate called"
-        args = ["./pirate.py", "&"]
-        subprocess.Popen(args)
-
-    def startPirates(self):
-        print "Rummy.startPirates called"
-        for i in range(0, self.crewSize):
-            self.startPirate()
-        print "Done starting pirates"
 
     def printCrew(self):
         for pirate in self.crew:

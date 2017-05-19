@@ -1,7 +1,9 @@
+import subprocess
+
 class Member:
 
     def __init__(self, id):
-        self.connected = False;
+        self.connected = False
         self.clues = []
         self.cluesSolved = 0
         self.totalCluesSolved = 0
@@ -10,11 +12,11 @@ class Member:
         self.paused = False
 
         self.res = {
+            "id": id,
             "status": "",  # string, <-- success/error
             "message": "",  # string, <-- message of error/success
             "data": "",  # string-or-list,
-            "id": id,
-            "finished": False,  # boolean <-- only true if all maps & clues have been solved and the treasure was found
+            "finished": False  # boolean <-- only true if all maps & clues have been solved and the treasure was found
         }
 
     def toString(self):
@@ -27,3 +29,19 @@ class Member:
             self.res['data'] = self.clues.pop()
         else:
             self.res['data'] = "wait"
+
+    def startPirate(self, port):
+        print "Rummy.startPirate called"
+        args = ["./pirate.py", str(port), "&"]
+        subprocess.Popen(args)
+
+    def clean(self):
+        self.clues = []
+        self.res['data'] = ""
+
+    def statUpdateErrorClue(self):
+        self.cluesSolved -= 1
+        self.totalCluesSolved -= 1
+        self.totalFailed += 1
+        self.failed += 1
+

@@ -13,7 +13,7 @@ class Pirate:
     def __init__(self):
         self.s = 0
         self.host = socket.gethostname()  # Get local machine name
-        self.port = 12346     # Reserve a port for your service.
+        self.port = int(sys.argv[1]) # Reserve a port for your service.
         self.clue = "No clue provided"
         self.clueid = -1
 
@@ -38,8 +38,11 @@ class Pirate:
 
         self.s.send(json.dumps(self.res))
 
-        obj = json.loads(str(self.s.recv(4096)))
-
+        read = str(self.s.recv(4096))
+        try:
+            obj = json.loads(read)
+        except ValueError:
+            print str(read)
 
         if self.res['id'] == -1:
             self.res['id'] = obj['id']

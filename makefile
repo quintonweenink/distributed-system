@@ -1,5 +1,5 @@
 default: 
-	./quartermaster.py
+	./quartermaster.py 12396
 clean:
 	rm -rf data/crew
 	rm rummy.pyc | true

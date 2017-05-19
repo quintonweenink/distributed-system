@@ -14,12 +14,16 @@ class Quartermaster:
     def __init__(self, crewSize):
         self.s = {}
         self.host = socket.gethostname()  # Get local machine name
-        self.port = 12346  # Reserve a port for your service.
+        self.port = int(sys.argv[1])   # Reserve a port for your service.
         self.crewSize = crewSize
         self.clueList = []
         self.verifyListSize = 199
         self.mapListSize = 20.0
         self.clueListSize = 1000.0
+
+        self.numClue = 0
+        self.numMap = 0
+        self.numMapClue = 0
 
         print "========== QUARTERMASTER ======="
 
@@ -34,22 +38,15 @@ class Quartermaster:
         self.s.bind((self.host, self.port))  # Bind to the port
         self.s.listen(20)  # Now wait for client connection.
 
-        self.captain = iRummy(crewSize)
+        self.captain = iRummy(crewSize, self.port)
+        self.startPirates()
 
     def listenDispatch(self):
-
-        numClue = 0
-        numMap = 0
-        outputChars = 0
-        numMapClue = 0
-        self.backspace(outputChars)
-        output = self.printPirates(numMap, numClue, numMapClue)
-        print(output)
-        outputChars = len(output)
+        print self.printPirates() + self.printProblemState()
 
         while True:
             self.captain.getPirateClues()
-            numMapClue = 0
+            self.numMapClue = 0
 
 
             for member in self.captain.crew:
@@ -59,18 +56,15 @@ class Quartermaster:
 
             while not self.isAllDead() or len(self.clueList) > 0:
 
-                # RECEIVE AND DISPATCH THE CLUES
+                # Receive and dispatch clues
                 if not self.isAllDead():
                     c, addr = self.s.accept()  # Establish connection with client.
                     obj = json.loads(str(c.recv(1024)))
-
-                    # print json.dumps(obj)
                     if obj["id"] == -1:
                         for member in self.captain.crew:
                             if member.connected == False:
                                 member.connected = True
                                 member.getClue()
-
                                 c.send(json.dumps(member.res))
                                 break
                     else:
@@ -81,24 +75,20 @@ class Quartermaster:
                                     self.addToClueList(member.res['id'], obj['data'])
                                     member.cluesSolved += 1
                                     member.totalCluesSolved += 1
-                                    numClue += 1
-                                    numMapClue += 1
+                                    self.numClue += 1
+                                    self.numMapClue += 1
 
                                 c.send(json.dumps(member.res))
                                 break
 
-                    c.close()  # Close the connection
+                    c.close()
 
-                self.backspace(outputChars)
-                output = self.printPirates(numMap, numClue, numMapClue)
-                print(output)
-                outputChars = len(output)
+                print self.printPirates() + self.printProblemState()
 
 
                 # VERIFY THE SOLVED CLUES
                 if len(self.clueList) > self.verifyListSize or self.isDone():
-                    numClue = 0
-                    outputChars = 0
+                    self.numClue = 0
                     print " Verifying clueList..."
                     rummyObj = self.captain.verify(self.clueList)
                     self.clueList = []
@@ -122,22 +112,55 @@ class Quartermaster:
                                     if member.res['id'] == clueError["id"]:
                                         for error in clueError['data']:
                                             member.clues.append(error)
-                                            member.cluesSolved -= 1
-                                            member.totalCluesSolved -= 1
-                                            member.totalFailed += 1
-                                            member.failed += 1
-                                            numMapClue -= 1
+                                            member.statUpdateErrorClue()
+                                            self.numMapClue -= 1
                     for member in self.captain.crew:
                         if len(member.clues) == 0 and member.res['data'] == 'wait':
                             member.paused = True
 
-                    self.backspace(outputChars)
-                    output = self.printPirates(numMap, numClue, numMapClue)
-                    print(output)
-                    outputChars = len(output)
+                    print self.printPirates() + self.printProblemState()
 
             print "YOU HAVE COMPLETED ONE MAP"
-            numMap += 1
+            self.killPoorPerformingPirates()
+            self.numMap += 1
+
+
+    def killPoorPerformingPirates(self):
+        print "Killing corrupt pirates..."
+        killed = []
+        for member in self.captain.crew:
+            failureRate = 100.0 * (float(member.totalFailed) / float(member.totalCluesSolved + 1))
+            print failureRate
+            if (failureRate > 7.5):
+                self.captain.remove(member.res['id'])  # send remove request to rummy
+                killed.append(member)
+                while True:
+                    c, addr = self.s.accept()
+                    obj = json.loads(str(c.recv(1024)))
+                    if member.res['id'] == obj['id']:
+                        member.res['finished'] = True
+                        c.send(json.dumps(member.res))
+                        c.close()
+                        break
+                    c.send(json.dumps(member.res))
+                    c.close()
+
+        self.captain.cleanUpMembers(killed)
+
+        if len(killed) > 0:
+            res = self.captain.add(len(killed))
+            print res['message']
+            crewids = res['data']
+            self.captain.createMembers(crewids)
+
+        self.startPirates()
+
+    def startPirates(self):
+        print "Rummy.startPirates called"
+        for member in self.captain.crew:
+            if member.connected == False:
+                member.startPirate(self.port)
+        print "Done starting pirates"
 
     def toString(self):
         self.captain.printCrew()
@@ -159,28 +182,31 @@ class Quartermaster:
                 return False
         return True
 
-
     def backspace(self, n):
         print('\r'*n)
 
-    def printPirates(self, m, i, mc):
+    def printPirates(self):
+
         output = "+-----------------------------------------------------------------------+\n"
         output += "| ID\t\t\t\t\t| Conn\t| Solv\t| Left\t| Fail\t|\n"
         output += "|-----------------------------------------------------------------------|\n"
         for pirate in self.captain.crew:
             output += pirate.toString()
         output += "+-----------------------------------------------------------------------+\n"
+        return output
 
-        clueSetPercentage = ((float(i) / float(self.verifyListSize)) * 100.0)
+    def printProblemState(self):
+
+        clueSetPercentage = ((float(self.numClue) / float(self.verifyListSize)) * 100.0)
         clueSetDisplay = int(clueSetPercentage / 2.0)
 
-        mapPercentage = ((float(mc) / float(self.clueListSize)) * 100.0)
+        mapPercentage = ((float(self.numMapClue) / float(self.clueListSize)) * 100.0)
         mapDisplay = int(mapPercentage / 2.0)
 
-        problemPercentage = (((float(m) / float(self.mapListSize)) * 100.0)+(mapPercentage/self.mapListSize))
+        problemPercentage = (((float(self.numMap) / float(self.mapListSize)) * 100.0)+(mapPercentage/self.mapListSize))
         problemDisplay = int(problemPercentage / 2.0)
 
-        output += "Problem completion (~): \n"
+        output = "Problem completion (~): \n"
         output += str("{0:.1f}".format((problemPercentage if (problemPercentage < 100.0) else 100.0))) + " %\t["
         for x in range(0, problemDisplay):
             output += u'\u2588'
