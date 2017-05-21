@@ -3,19 +3,20 @@
 import socket
 import json
 import sys
+import time
 
 execfile("irummy.py")
 
 # Master
 class Quartermaster:
 
-    def __init__(self, crewSize):
+    def __init__(self):
         self.s = {}
         self.host = socket.gethostname()  # Get local machine name
         self.port = int(sys.argv[1])   # Reserve a port for your service.
-        self.crewSize = crewSize
+        self.crewSize = int(sys.argv[2])
         self.clueList = []
-        self.verifyListSize = 199
+        self.verifyListSize = 500
         self.mapListSize = 20.0
         self.clueListSize = 1000.0
 
@@ -33,10 +34,12 @@ class Quartermaster:
         print ""
 
         self.s = socket.socket()  # Create a socket object
-        self.s.bind((self.host, self.port))  # Bind to the port
+        self.s.bind((self.host, self.port))  # Bind to
+
+        #  the port
         self.s.listen(20)  # Now wait for client connection.
 
-        self.captain = iRummy(crewSize, self.port)
+        self.captain = iRummy(self.crewSize, self.port)
         self.startPirates()
 
     def listenDispatch(self):
@@ -64,6 +67,11 @@ class Quartermaster:
                                 member.getClue()
                                 c.send(json.dumps(member.res))
                                 break
+                            elif member.disconnected == True:
+                                member.lastSeen = time.time()
+                                member.disconnected = False
+                                c.send(json.dumps(member.res))
+                                break
                     else:
                         for member in self.captain.crew:
                             if member.res['id'] == obj["id"]:
@@ -79,15 +87,24 @@ class Quartermaster:
                                 break
 
                     c.close()
-
+                if self.numClue % 10 == 0:
+                    print self.printPirates() + self.printProblemState()
+                    self.restartNonRespondingPirates()
                 self.verifyClues()
-
-                print self.printPirates() + self.printProblemState()
 
             print "YOU HAVE COMPLETED ONE MAP"
             self.killPoorPerformingPirates()
             self.numMap += 1
 
+
+    def restartNonRespondingPirates(self):
+        currentTime = time.time()
+        for member in self.captain.crew:
+            timeSince = int(currentTime - member.lastSeen)
+            if timeSince > 25:
+                print "Restarting non responding pirates..."
+                member.disconnected = True
+                member.startPirate(self.port)
 
     def killPoorPerformingPirates(self):
         print "Killing corrupt pirates..."
@@ -133,10 +150,9 @@ class Quartermaster:
                     obj = json.loads(str(c.recv(1024)))
                     c.send(json.dumps(member.res))
                     c.close()
-
                 self.s.close()
-
-                sys.exit("YOU COMPLETED THE PROBLEM")
+                print "YOU COMPLETED THE PROBLEM"
+                quit()
             elif rummyObj['status'] == "error":
                 if 'data' in rummyObj:
                     data = rummyObj['data']
@@ -150,6 +166,8 @@ class Quartermaster:
             for member in self.captain.crew:
                 if len(member.clues) == 0 and member.res['data'] == 'wait':
                     member.paused = True
+
+            print self.printPirates() + self.printProblemState()
 
     def startPirates(self):
         print "Rummy.startPirates called"
@@ -229,5 +247,5 @@ class Quartermaster:
 
 
 
-quartermaster = Quartermaster(10)
+quartermaster = Quartermaster()
 quartermaster.listenDispatch()

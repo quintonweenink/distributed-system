@@ -39,6 +39,7 @@ class Pirate:
         self.s.send(json.dumps(self.res))
 
         read = str(self.s.recv(4096))
+        obj = {}
         try:
             obj = json.loads(read)
         except ValueError:

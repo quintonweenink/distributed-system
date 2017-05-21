@@ -1,4 +1,5 @@
 import subprocess
+import time
 
 class Member:
 
@@ -10,6 +11,8 @@ class Member:
         self.failed = 0
         self.totalFailed = 0
         self.paused = False
+        self.disconnected = False
+        self.lastSeen = time.time()
 
         self.res = {
             "id": id,
@@ -25,6 +28,7 @@ class Member:
 
 
     def getClue(self):
+        self.lastSeen = time.time()
         if len(self.clues) > 0:
             self.res['data'] = self.clues.pop()
         else:
