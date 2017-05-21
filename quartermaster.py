@@ -15,6 +15,7 @@ class Quartermaster:
         self.host = socket.gethostname()  # Get local machine name
         self.port = int(sys.argv[1])   # Reserve a port for your service.
         self.crewSize = int(sys.argv[2])
+        self.selfCrewSize = int(sys.argv[3])
         self.clueList = []
         self.verifyListSize = 500
         self.mapListSize = 20.0
@@ -40,7 +41,7 @@ class Quartermaster:
         self.s.listen(20)  # Now wait for client connection.
 
         self.captain = iRummy(self.crewSize, self.port)
-        self.startPirates()
+        self.beginPirates(self.selfCrewSize)
 
     def listenDispatch(self):
         print self.printPirates() + self.printProblemState()
@@ -174,6 +175,13 @@ class Quartermaster:
         for member in self.captain.crew:
             if member.connected == False:
                 member.startPirate(self.port)
+        print "Done starting pirates"
+
+    def beginPirates(self, num):
+        print "Rummy.startPirates called"
+        member = self.captain.crew[0]
+        for x in range(0, num):
+            member.startPirate(self.port)
         print "Done starting pirates"
 
     def toString(self):
