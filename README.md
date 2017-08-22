@@ -1,5 +1,5 @@
-# rummy
+# Distributed Systems
 
-# TODO:
-	* Change the pirates to have independent ports & connections to communicate on.
-	* Ensure that if you kill a pirate that the execution still passes
+## rummy-project
+> distributed system that utilizes a group of individual agents, each solving
+smaller tasks, in order to accomplish a common goal.
