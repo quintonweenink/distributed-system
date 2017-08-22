@@ -152,6 +152,7 @@ class Quartermaster:
                     c.send(json.dumps(member.res))
                     c.close()
                 self.s.close()
+                print str(rummyObj)
                 print "YOU COMPLETED THE PROBLEM"
                 quit()
             elif rummyObj['status'] == "error":

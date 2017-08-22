@@ -1,5 +1,5 @@
 default: 
-	time -p ./quartermaster.py 12396 10 10
+	time -p ./src/quartermaster.py 12396 10 10
 clean:
 	rm -rf data/crew
 	rm rummy.pyc | true
