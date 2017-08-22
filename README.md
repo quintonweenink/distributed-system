@@ -1,4 +1,3 @@
 # Distributed Systems
-
 ## rummy-project
-distributed system that utilizes a group of individual agents, each solving smaller tasks, in order to accomplish a common goal.
+Distributed System that utilizes a Group of Individual agents, each solving smaller tasks, in order to accomplish a common Goal.
